@@ -1077,14 +1077,6 @@ class text():
     def Resource_Utilization(self, choosed_dc):
         return (0.5*self.dcs_dict[choosed_dc]['dc_cpu_resource'])/self._dc_cpu_resourse + (0.5*self.dcs_dict[choosed_dc]['dc_mem_resource'])/self._dc_mem_resourse
 
-
-
-
-
-
-
-
-    # 写论文专用代码区域
     def addDataCenter(self, dc_name, dc_cpu_resource, dc_mem_resource):
         self.dcs_dict[dc_name]['dc_cpu_resource'] = dc_cpu_resource
         self.dcs_dict[dc_name]['dc_mem_resource'] = dc_mem_resource
