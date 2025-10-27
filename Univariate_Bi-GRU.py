@@ -13,9 +13,10 @@ from sklearn.metrics import r2_score
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras import Sequential, layers, utils
 from tensorflow_addons.layers import MultiHeadAttention
+from tensorflow.keras.optimizers import Adam
 
 start_time = time.time()
-dataset = pd.read_csv('DOM_hourly.csv')
+dataset = pd.read_csv('cpu.csv')
 # 显示shape
 dataset.shape
 # 默认显示前5行
@@ -40,7 +41,7 @@ dataset.head()
 # 均值为0，标准差为1
 scaler = MinMaxScaler()
 # reshape(-1, 1) 第一个-1不管多少行，第二个1只是1列
-dataset['DOM_MW'] = scaler.fit_transform(dataset['DOM_MW'].values.reshape(-1, 1))
+dataset['Value'] = scaler.fit_transform(dataset['Value'].values.reshape(-1, 1))
 # 可视化显示归一化后的数据分布情况
 
 # dataset['DOM_MW'].plot(figsize=(16,8))
@@ -133,12 +134,6 @@ X, y = create_new_dataset(dataset_original.values, seq_len = SEQ_LEN)
 # ③ 数据集切分
 X_train, X_test, y_train, y_test = split_dataset(X, y, train_ratio=0.9)
 
-# 训练集和数据集的形状
-# X_train.shape (104559, 12, 1)
-# y_train.shape (104559, 1)
-# X_test.shape  (11618, 12, 1)
-# y_test.shape  (11618, 1)
-
 # ④ 基于新的X_train, X_test, y_train, y_test创建批数据(batch dataset)
 # 测试批数据
 test_batch_dataset = create_batch_data(X_test, y_test, batch_size=256, data_type=1)
@@ -165,7 +160,7 @@ class BidirectionalGRU(layers.Layer):
         return layers.concatenate([forward_output_last, backward_output_last])
 
 model = Sequential([
-    BidirectionalGRU(2),
+    BidirectionalGRU(16),
     layers.Dense(1)
 ])
 
@@ -178,7 +173,11 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=file_path,
                                                          save_best_only=True,
                                                          save_weights_only=True)
 # 模型编译
-model.compile(optimizer='adam', loss="mae")
+model.compile(
+    optimizer=Adam(learning_rate=0.0005),
+    loss='mse',
+    metrics=['mae']
+)
 
 # 模型训练
 history = model.fit(train_batch_dataset,
@@ -211,7 +210,6 @@ print("均方根误差 (RMSE): ", rmse)
 mae = mean_absolute_error(y_test, test_pred)
 print("平均绝对误差 (MAE): ", mae)
 
-
 # 绘制模型验证结果
 plt.figure(figsize=(16,8))
 plt.plot(y_test, label="True label")
@@ -219,20 +217,6 @@ plt.plot(test_pred, label="Pred label")
 plt.title("True vs Pred")
 plt.legend(loc='best')
 plt.show()
-# 绘制test中前100个点的真值与预测值
-y_true = scaler.inverse_transform(y_test[80:100])
-y_pred = scaler.inverse_transform(test_pred[80:100])
 
-with open("resource_Bi-GRU.txt", "w") as file:
-    # 将列表数据逐行写入文件
-    for item in test_pred[:100]:
-        file.write(str(item) + "\n")
-# y_true = y_test[:100]
-# y_pred = test_pred[:100]
-plt.figure(figsize=(16, 8))
-plt.plot(y_true, marker='o', color='red', label = "true")
-plt.plot(y_pred, marker='*', color='blue', label = "pred")
-plt.legend(loc='upper left')  # 将图例放置在右上角
-plt.show()
 end_time = time.time()
 print("Bi-GRU运行时间：", end_time-start_time)
