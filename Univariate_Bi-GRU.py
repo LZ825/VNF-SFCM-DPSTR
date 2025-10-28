@@ -12,7 +12,6 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import r2_score
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras import Sequential, layers, utils
-from tensorflow_addons.layers import MultiHeadAttention
 from tensorflow.keras.optimizers import Adam
 
 start_time = time.time()
