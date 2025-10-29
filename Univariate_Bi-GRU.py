@@ -12,11 +12,10 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import r2_score
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras import Sequential, layers, utils
-from tensorflow_addons.layers import MultiHeadAttention
 from tensorflow.keras.optimizers import Adam
 
 start_time = time.time()
-dataset = pd.read_csv('cpu.csv')
+dataset = pd.read_csv('data_mem.csv')
 # 显示shape
 dataset.shape
 # 默认显示前5行
@@ -25,7 +24,7 @@ print(dataset.head())
 # 显示数据描述
 dataset.describe()
 # 将字段Datetime数据类型转换为日期类型
-dataset['Datetime'] = pd.to_datetime(dataset['Datetime'], format="%Y-%m-%d %H:%M:%S")
+# dataset['Datetime'] = pd.to_datetime(dataset['Datetime'], format="%Y-%m-%d %H:%M:%S")
 # 将字段Datetime设置为索引列
 # 目的：后续基于索引来进行数据集的切分
 dataset.index = dataset.Datetime
@@ -41,7 +40,7 @@ dataset.head()
 # 均值为0，标准差为1
 scaler = MinMaxScaler()
 # reshape(-1, 1) 第一个-1不管多少行，第二个1只是1列
-dataset['Value'] = scaler.fit_transform(dataset['Value'].values.reshape(-1, 1))
+dataset['mem'] = scaler.fit_transform(dataset['mem'].values.reshape(-1, 1))
 # 可视化显示归一化后的数据分布情况
 
 # dataset['DOM_MW'].plot(figsize=(16,8))
@@ -159,7 +158,7 @@ class BidirectionalGRU(layers.Layer):
         backward_output_last = backward_output[:, 0, :]  # 反向传播的最后一个时间步
         return layers.concatenate([forward_output_last, backward_output_last])
 
-model = Sequential([
+model = tf.keras.Sequential([
     BidirectionalGRU(16),
     layers.Dense(1)
 ])
